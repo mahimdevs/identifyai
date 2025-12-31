@@ -21,7 +21,6 @@ const CameraView = ({
   onCameraStop 
 }: CameraViewProps) => {
   const internalVideoRef = useRef<HTMLVideoElement>(null);
-  const videoRefToUse = externalVideoRef || internalVideoRef;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -33,16 +32,23 @@ const CameraView = ({
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
-      if (videoRefToUse.current) {
-        videoRefToUse.current.srcObject = mediaStream;
-        setStream(mediaStream);
-        setIsCameraActive(true);
-        onCameraStart?.();
+      
+      // Set stream to external video ref if provided (for inline preview)
+      if (externalVideoRef?.current) {
+        externalVideoRef.current.srcObject = mediaStream;
       }
+      // Also set to internal ref for fullscreen mode
+      if (internalVideoRef.current) {
+        internalVideoRef.current.srcObject = mediaStream;
+      }
+      
+      setStream(mediaStream);
+      setIsCameraActive(true);
+      onCameraStart?.();
     } catch (error) {
       console.error('Error accessing camera:', error);
     }
-  }, [facingMode, videoRefToUse, onCameraStart]);
+  }, [facingMode, externalVideoRef, onCameraStart]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
@@ -60,8 +66,8 @@ const CameraView = ({
   }, [stopCamera, startCamera]);
 
   const capturePhoto = useCallback(() => {
-    if (videoRefToUse.current && canvasRef.current) {
-      const video = videoRefToUse.current;
+    const video = externalVideoRef?.current || internalVideoRef.current;
+    if (video && canvasRef.current) {
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -73,7 +79,7 @@ const CameraView = ({
         onCapture(imageData);
       }
     }
-  }, [onCapture, stopCamera, videoRefToUse]);
+  }, [onCapture, stopCamera, externalVideoRef]);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
