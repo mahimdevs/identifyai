@@ -133,41 +133,14 @@ const Index = () => {
           </p>
         </motion.div>
 
-        {/* Camera Preview Area */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="relative mx-auto mb-8"
-        >
-          <div className="w-64 h-64 rounded-3xl bg-secondary border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
-            />
-            
-            {isCameraActive && (
-              <div className="absolute inset-3 pointer-events-none z-10">
-                <div className="absolute top-0 left-0 w-5 h-5 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-                <div className="absolute top-0 right-0 w-5 h-5 border-r-2 border-t-2 border-primary rounded-tr-lg" />
-                <div className="absolute bottom-0 left-0 w-5 h-5 border-l-2 border-b-2 border-primary rounded-bl-lg" />
-                <div className="absolute bottom-0 right-0 w-5 h-5 border-r-2 border-b-2 border-primary rounded-br-lg" />
-              </div>
-            )}
-            
-            {!isCameraActive && (
-              <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center float-animation">
-                  <Camera className="w-8 h-8" />
-                </div>
-                <span className="text-xs">Camera preview</span>
-              </div>
-            )}
-          </div>
-        </motion.div>
+        {/* Hidden video for camera capture */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="hidden"
+        />
 
         {/* Action Buttons */}
         <motion.div
