@@ -133,93 +133,137 @@ const Index = () => {
           </p>
         </motion.div>
 
-        {/* Animated Magnifying Glass */}
+        {/* Animated Magnifying Glass with Camera */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
           className="relative flex items-center justify-center mb-10"
         >
-          {/* Outer glow rings */}
-          <motion.div
-            className="absolute w-48 h-48 rounded-full border border-primary/20"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute w-40 h-40 rounded-full border border-primary/30"
-            animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.2, 0.4] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-          />
+          {/* Outer glow rings - only when camera not active */}
+          {!isCameraActive && (
+            <>
+              <motion.div
+                className="absolute w-48 h-48 rounded-full border border-primary/20"
+                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="absolute w-40 h-40 rounded-full border border-primary/30"
+                animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.2, 0.4] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+              />
+            </>
+          )}
+
+          {/* Scanning rings when camera active */}
+          {isCameraActive && (
+            <>
+              <motion.div
+                className="absolute w-36 h-36 rounded-full border-2 border-primary/40"
+                animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.2, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+              />
+              <motion.div
+                className="absolute w-36 h-36 rounded-full border-2 border-primary/30"
+                animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
+              />
+            </>
+          )}
           
           {/* Main magnifying glass */}
           <motion.div
             className="relative"
-            animate={{ y: [0, -6, 0] }}
+            animate={isCameraActive ? {} : { y: [0, -6, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            {/* Glass circle */}
-            <motion.div
-              className="w-28 h-28 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-4 border-primary flex items-center justify-center relative overflow-hidden"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              {/* Shine effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent"
-                animate={{ x: [-100, 100], opacity: [0, 1, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            {/* Glass circle with camera or animation */}
+            <div className="w-32 h-32 rounded-full border-4 border-primary flex items-center justify-center relative overflow-hidden bg-secondary">
+              {/* Video feed */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
               />
               
-              {/* Inner scanning lines */}
-              <motion.div
-                className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-                animate={{ y: [-40, 40] }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-              />
+              {/* Scanning line when camera active */}
+              {isCameraActive && (
+                <motion.div
+                  className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
+                  animate={{ y: [-50, 50] }}
+                  transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                />
+              )}
+
+              {/* Corner markers when camera active */}
+              {isCameraActive && (
+                <div className="absolute inset-2 pointer-events-none z-10">
+                  <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-white/80 rounded-tl" />
+                  <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-white/80 rounded-tr" />
+                  <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-white/80 rounded-bl" />
+                  <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-white/80 rounded-br" />
+                </div>
+              )}
               
-              {/* Center sparkle */}
-              <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <Search className="w-10 h-10 text-primary" />
-              </motion.div>
-            </motion.div>
+              {/* Animation when camera not active */}
+              {!isCameraActive && (
+                <>
+                  {/* Shine effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"
+                    animate={{ x: [-100, 100], opacity: [0, 1, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  />
+                  
+                  {/* Inner scanning lines */}
+                  <motion.div
+                    className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                    animate={{ y: [-40, 40] }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                  />
+                  
+                  {/* Center icon */}
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    <Search className="w-10 h-10 text-primary" />
+                  </motion.div>
+                </>
+              )}
+            </div>
             
             {/* Handle */}
-            <motion.div
+            <div
               className="absolute -bottom-6 -right-6 w-5 h-16 bg-gradient-to-b from-primary to-primary/70 rounded-full origin-top transform rotate-45"
               style={{ transformOrigin: 'top center' }}
             />
           </motion.div>
           
-          {/* Floating particles */}
-          <motion.div
-            className="absolute top-4 right-8 w-2 h-2 rounded-full bg-primary/60"
-            animate={{ y: [-8, 8], x: [0, 4, 0], opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          <motion.div
-            className="absolute bottom-8 left-6 w-1.5 h-1.5 rounded-full bg-primary/50"
-            animate={{ y: [6, -6], x: [0, -3, 0], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
-          />
-          <motion.div
-            className="absolute top-12 left-4 w-1 h-1 rounded-full bg-primary/40"
-            animate={{ y: [-4, 4], opacity: [0.4, 0.7, 0.4] }}
-            transition={{ duration: 1.8, repeat: Infinity, delay: 0.3 }}
-          />
+          {/* Floating particles - only when camera not active */}
+          {!isCameraActive && (
+            <>
+              <motion.div
+                className="absolute top-4 right-8 w-2 h-2 rounded-full bg-primary/60"
+                animate={{ y: [-8, 8], x: [0, 4, 0], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute bottom-8 left-6 w-1.5 h-1.5 rounded-full bg-primary/50"
+                animate={{ y: [6, -6], x: [0, -3, 0], opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+              />
+              <motion.div
+                className="absolute top-12 left-4 w-1 h-1 rounded-full bg-primary/40"
+                animate={{ y: [-4, 4], opacity: [0.4, 0.7, 0.4] }}
+                transition={{ duration: 1.8, repeat: Infinity, delay: 0.3 }}
+              />
+            </>
+          )}
         </motion.div>
-
-        {/* Hidden video for camera */}
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="hidden"
-        />
 
         {/* Action Buttons */}
         <motion.div
