@@ -152,6 +152,10 @@ const Index = () => {
                       autoPlay
                       playsInline
                       muted
+                      onLoadedMetadata={(e) => {
+                        const video = e.currentTarget;
+                        video.play().catch(() => console.log('Video play handled'));
+                      }}
                       className="w-full h-full object-cover"
                     />
                     {/* Scanning line animation */}

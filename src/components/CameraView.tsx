@@ -29,17 +29,33 @@ const CameraView = ({
 
   const startCamera = useCallback(async () => {
     try {
+      console.log('Starting camera with facingMode:', facingMode);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
       });
+      
+      console.log('Got media stream, tracks:', mediaStream.getVideoTracks().length);
       
       // Set stream to external video ref if provided (for inline preview)
       if (externalVideoRef?.current) {
+        console.log('Setting stream to external video ref');
         externalVideoRef.current.srcObject = mediaStream;
+        // Ensure video plays
+        try {
+          await externalVideoRef.current.play();
+          console.log('External video playing');
+        } catch (playError) {
+          console.log('External video autoplay handled by browser');
+        }
       }
       // Also set to internal ref for fullscreen mode
       if (internalVideoRef.current) {
         internalVideoRef.current.srcObject = mediaStream;
+        try {
+          await internalVideoRef.current.play();
+        } catch (playError) {
+          console.log('Internal video autoplay handled by browser');
+        }
       }
       
       setStream(mediaStream);
