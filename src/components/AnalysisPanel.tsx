@@ -72,9 +72,9 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
         <img
           src={result.imageData}
           alt=""
-          className="w-full h-full object-cover scale-110 blur-2xl opacity-40"
+          className="w-full h-full object-cover scale-110 blur-2xl opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/50 to-background/80" />
       </div>
 
       {/* Content */}
@@ -91,7 +91,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/40"
+              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30"
             >
               <X className="w-5 h-5 text-white" />
             </Button>
@@ -100,7 +100,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 variant="ghost"
                 size="icon"
                 onClick={onToggleFavorite}
-                className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/40"
+                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30"
               >
                 <Heart
                   className={cn(
@@ -113,7 +113,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 variant="ghost"
                 size="icon"
                 onClick={onShare}
-                className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/40"
+                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30"
               >
                 <Share2 className="w-5 h-5 text-white" />
               </Button>
@@ -203,9 +203,9 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.35 }}
-                className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-lg space-y-4"
+                className="p-4 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-xl space-y-4"
               >
-                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wide">
                   Nutrition Breakdown
                 </h3>
                 {otherNutrition.map((item, index) => {
@@ -248,10 +248,10 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 {result.details.slice(0, 2).map((detail, index) => (
                   <div
                     key={index}
-                    className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-lg"
+                    className="p-4 rounded-2xl bg-white/15 border border-white/20 backdrop-blur-xl"
                   >
                     <h4 className="text-sm font-semibold text-white mb-2">{detail.title}</h4>
-                    <p className="text-sm text-white/60 leading-relaxed">{detail.content}</p>
+                    <p className="text-sm text-white/70 leading-relaxed">{detail.content}</p>
                   </div>
                 ))}
               </motion.div>
@@ -266,7 +266,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
               >
                 <button
                   onClick={() => setShowTips(!showTips)}
-                  className="w-full p-4 rounded-2xl bg-primary/10 border border-primary/20 backdrop-blur-lg flex items-center justify-between"
+                  className="w-full p-4 rounded-2xl bg-primary/20 border border-primary/30 backdrop-blur-xl flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
