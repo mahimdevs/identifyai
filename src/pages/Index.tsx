@@ -173,75 +173,83 @@ const Index = () => {
           )}
           
           {/* Main magnifying glass */}
-          <motion.div
-            className="relative"
-            animate={isCameraActive ? {} : { y: [0, -6, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            {/* Glass circle with camera or animation */}
-            <div className="w-40 h-40 rounded-full border-4 border-primary flex items-center justify-center relative overflow-hidden bg-secondary">
-              {/* Video feed */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
-              />
-              
-              {/* Scanning line when camera active */}
-              {isCameraActive && (
-                <motion.div
-                  className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
-                  animate={{ y: [-60, 60] }}
-                  transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+          <div className="relative">
+            <motion.div
+              animate={isCameraActive ? {} : { y: [0, -6, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              {/* Glass circle with camera or animation */}
+              <div className="w-40 h-40 rounded-full border-[5px] border-primary flex items-center justify-center relative overflow-hidden bg-primary/5 shadow-lg shadow-primary/20">
+                {/* Video feed */}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
                 />
-              )}
+                
+                {/* Scanning line when camera active */}
+                {isCameraActive && (
+                  <motion.div
+                    className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
+                    animate={{ y: [-60, 60] }}
+                    transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                  />
+                )}
 
-              {/* Corner markers when camera active */}
-              {isCameraActive && (
-                <div className="absolute inset-3 pointer-events-none z-10">
-                  <div className="absolute top-0 left-0 w-5 h-5 border-l-2 border-t-2 border-white/80 rounded-tl" />
-                  <div className="absolute top-0 right-0 w-5 h-5 border-r-2 border-t-2 border-white/80 rounded-tr" />
-                  <div className="absolute bottom-0 left-0 w-5 h-5 border-l-2 border-b-2 border-white/80 rounded-bl" />
-                  <div className="absolute bottom-0 right-0 w-5 h-5 border-r-2 border-b-2 border-white/80 rounded-br" />
-                </div>
-              )}
-              
-              {/* Animation when camera not active */}
-              {!isCameraActive && (
-                <>
-                  {/* Shine effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"
-                    animate={{ x: [-120, 120], opacity: [0, 1, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                  />
-                  
-                  {/* Inner scanning lines */}
-                  <motion.div
-                    className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-                    animate={{ y: [-50, 50] }}
-                    transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-                  />
-                  
-                  {/* Center icon */}
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <Search className="w-12 h-12 text-primary" />
-                  </motion.div>
-                </>
-              )}
-            </div>
+                {/* Corner markers when camera active */}
+                {isCameraActive && (
+                  <div className="absolute inset-3 pointer-events-none z-10">
+                    <div className="absolute top-0 left-0 w-5 h-5 border-l-2 border-t-2 border-white/80 rounded-tl" />
+                    <div className="absolute top-0 right-0 w-5 h-5 border-r-2 border-t-2 border-white/80 rounded-tr" />
+                    <div className="absolute bottom-0 left-0 w-5 h-5 border-l-2 border-b-2 border-white/80 rounded-bl" />
+                    <div className="absolute bottom-0 right-0 w-5 h-5 border-r-2 border-b-2 border-white/80 rounded-br" />
+                  </div>
+                )}
+                
+                {/* Animation when camera not active */}
+                {!isCameraActive && (
+                  <>
+                    {/* Subtle inner glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+                    
+                    {/* Shine effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent"
+                      animate={{ x: [-120, 120], opacity: [0, 1, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 2 }}
+                    />
+                    
+                    {/* Inner scanning lines */}
+                    <motion.div
+                      className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+                      animate={{ y: [-50, 50] }}
+                      transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                    />
+                    
+                    {/* Center icon */}
+                    <motion.div
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Search className="w-12 h-12 text-primary" />
+                    </motion.div>
+                  </>
+                )}
+              </div>
+            </motion.div>
             
-            {/* Handle */}
-            <div
-              className="absolute -bottom-7 -right-7 w-6 h-20 bg-gradient-to-b from-primary to-primary/70 rounded-full origin-top transform rotate-45"
-              style={{ transformOrigin: 'top center' }}
+            {/* Handle - properly positioned */}
+            <div 
+              className="absolute w-6 h-16 bg-gradient-to-b from-primary via-primary to-primary/60 rounded-full shadow-md"
+              style={{ 
+                bottom: '-20px', 
+                right: '-20px',
+                transform: 'rotate(45deg)',
+              }}
             />
-          </motion.div>
+          </div>
           
           {/* Floating particles - only when camera not active */}
           {!isCameraActive && (
