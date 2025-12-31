@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { History, Sparkles, Scan } from 'lucide-react';
+import { History, Search, Camera, Upload } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -7,8 +7,6 @@ import CameraView from '@/components/CameraView';
 import AnalysisPanel from '@/components/AnalysisPanel';
 import HistoryPanel from '@/components/HistoryPanel';
 import AnalyzingOverlay from '@/components/AnalyzingOverlay';
-import TipsCarousel from '@/components/TipsCarousel';
-import RecentScans from '@/components/RecentScans';
 import { useHistory } from '@/hooks/useHistory';
 import { AnalysisResult } from '@/types/analysis';
 import { analyzeImage } from '@/services/analysisService';
@@ -80,45 +78,36 @@ const Index = () => {
     setCurrentResult(prev => prev ? { ...prev, isFavorite: !prev.isFavorite } : null);
   }, [currentResult, toggleFavorite]);
 
+  const recentScans = history.slice(0, 4);
+
   return (
-    <div className="min-h-screen mesh-gradient flex flex-col relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-40 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-      
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="relative z-10 p-4 pt-6">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
+      <header className="px-5 pt-8 pb-4">
+        <div className="flex items-center justify-between max-w-md mx-auto">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2.5"
           >
-            <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <Search className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="font-display font-bold text-xl">
-                <span className="text-gradient">Identify</span>
-                <span className="text-foreground">Anytime</span>
-              </h1>
-              <p className="text-xs text-muted-foreground">Identify anything instantly</p>
-            </div>
+            <span className="font-display font-semibold text-lg text-foreground">
+              IdentifyAnytime
+            </span>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsHistoryOpen(true)}
-              className="w-11 h-11 rounded-xl bg-secondary/50 border border-border/50 hover:bg-secondary relative"
+              className="w-10 h-10 rounded-xl hover:bg-secondary relative"
             >
-              <History className="w-5 h-5" />
+              <History className="w-5 h-5 text-muted-foreground" />
               {history.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                   {history.length > 9 ? '9+' : history.length}
                 </span>
               )}
@@ -127,125 +116,136 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content - Pushed to bottom third */}
-      <main className="flex-1 flex flex-col justify-end relative z-10">
-        {/* Center visual element / Camera preview */}
-        <div className="flex-1 flex items-center justify-center px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="relative"
-          >
-            <div className="w-56 h-56 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm overflow-hidden relative">
-              {/* Video element always in DOM */}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                onLoadedMetadata={(e) => {
-                  const video = e.currentTarget;
-                  video.play().catch(() => console.log('Video play handled'));
-                }}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
-              />
-              
-              {/* Scanning overlay - only when camera active */}
-              {isCameraActive && (
-                <>
-                  <motion.div
-                    className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
-                    animate={{ top: ['0%', '100%', '0%'] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                  />
-                  <div className="absolute inset-2 pointer-events-none z-10">
-                    <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-                    <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr-lg" />
-                    <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl-lg" />
-                    <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br-lg" />
-                  </div>
-                </>
-              )}
-              
-              {/* Scan icon - only when camera inactive */}
-              <AnimatePresence>
-                {!isCameraActive && (
-                  <motion.div
-                    key="scan-icon"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="float-animation"
-                  >
-                    <Scan className="w-16 h-16 text-primary/60" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            {/* Floating particles */}
-            <motion.div
-              className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary/40"
-              animate={{ y: [-5, 5, -5], opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute -bottom-3 -left-3 w-3 h-3 rounded-full bg-primary/30"
-              animate={{ y: [5, -5, 5], opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            />
-            <motion.div
-              className="absolute top-1/2 -left-4 w-2 h-2 rounded-full bg-primary/50"
-              animate={{ x: [-3, 3, -3], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </motion.div>
-        </div>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col px-5 max-w-md mx-auto w-full">
+        {/* Hero Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-center py-8"
+        >
+          <h1 className="font-display text-3xl font-bold text-foreground mb-2">
+            Identify Anything
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+            Point your camera at any object and get instant AI-powered identification
+          </p>
+        </motion.div>
 
-        {/* Bottom section with controls */}
-        <div className="px-4 pb-8 space-y-6 max-w-lg mx-auto w-full">
-          {/* Recent scans or tips */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {history.length > 0 ? (
-              <RecentScans 
-                history={history} 
-                onSelectItem={(result) => setCurrentResult(result)} 
-              />
-            ) : (
-              <TipsCarousel />
+        {/* Camera Preview Area */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="relative mx-auto mb-8"
+        >
+          <div className="w-64 h-64 rounded-3xl bg-secondary border-2 border-dashed border-border flex items-center justify-center overflow-hidden relative">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
+            />
+            
+            {isCameraActive && (
+              <div className="absolute inset-3 pointer-events-none z-10">
+                <div className="absolute top-0 left-0 w-5 h-5 border-l-2 border-t-2 border-primary rounded-tl-lg" />
+                <div className="absolute top-0 right-0 w-5 h-5 border-r-2 border-t-2 border-primary rounded-tr-lg" />
+                <div className="absolute bottom-0 left-0 w-5 h-5 border-l-2 border-b-2 border-primary rounded-bl-lg" />
+                <div className="absolute bottom-0 right-0 w-5 h-5 border-r-2 border-b-2 border-primary rounded-br-lg" />
+              </div>
             )}
-          </motion.div>
+            
+            {!isCameraActive && (
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center float-animation">
+                  <Camera className="w-8 h-8" />
+                </div>
+                <span className="text-xs">Camera preview</span>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
-          {/* Action buttons */}
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
+          <CameraView 
+            onCapture={handleAnalyzeImage} 
+            isAnalyzing={isAnalyzing}
+            inlineMode={true}
+            videoRef={videoRef}
+            onCameraStart={() => setIsCameraActive(true)}
+            onCameraStop={() => setIsCameraActive(false)}
+          />
+        </motion.div>
+
+        {/* Recent Scans */}
+        {recentScans.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
+            className="pb-8"
           >
-            <CameraView 
-              onCapture={handleAnalyzeImage} 
-              isAnalyzing={isAnalyzing}
-              inlineMode={true}
-              videoRef={videoRef}
-              onCameraStart={() => setIsCameraActive(true)}
-              onCameraStop={() => setIsCameraActive(false)}
-            />
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">Recent</h2>
+            <div className="grid grid-cols-4 gap-3">
+              {recentScans.map((item, index) => (
+                <motion.button
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 + index * 0.05 }}
+                  onClick={() => setCurrentResult(item)}
+                  className="aspect-square rounded-xl overflow-hidden border border-border hover:border-primary transition-colors"
+                >
+                  <img
+                    src={item.imageData}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                </motion.button>
+              ))}
+            </div>
           </motion.div>
+        )}
 
-          {/* Subtle instruction */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center text-xs text-muted-foreground"
+        {/* Categories */}
+        {recentScans.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="pb-8"
           >
-            {isCameraActive ? 'Position the item in the frame and capture' : 'Point at any object to identify it with AI'}
-          </motion.p>
-        </div>
+            <h2 className="text-sm font-medium text-muted-foreground mb-3">What can you identify?</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Plants & Flowers', emoji: '🌿' },
+                { label: 'Animals & Pets', emoji: '🐕' },
+                { label: 'Food & Dishes', emoji: '🍽️' },
+                { label: 'Objects & More', emoji: '📦' },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.05 }}
+                  className="p-4 rounded-xl bg-secondary/50 border border-border"
+                >
+                  <span className="text-2xl mb-2 block">{item.emoji}</span>
+                  <span className="text-sm font-medium text-foreground">{item.label}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </main>
 
       {/* Analyzing Overlay */}
