@@ -240,15 +240,6 @@ const Index = () => {
               </div>
             </motion.div>
             
-            {/* Handle - properly positioned */}
-            <div 
-              className="absolute w-6 h-16 bg-gradient-to-b from-primary via-primary to-primary/60 rounded-full shadow-md"
-              style={{ 
-                bottom: '-20px', 
-                right: '-20px',
-                transform: 'rotate(45deg)',
-              }}
-            />
           </div>
           
           {/* Floating particles - only when camera not active */}
