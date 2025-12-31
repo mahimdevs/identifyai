@@ -138,41 +138,39 @@ const Index = () => {
             className="relative"
           >
             <div className="w-56 h-56 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm overflow-hidden relative">
-              <AnimatePresence mode="wait">
-                {isCameraActive ? (
+              {/* Video element always in DOM */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onLoadedMetadata={(e) => {
+                  const video = e.currentTarget;
+                  video.play().catch(() => console.log('Video play handled'));
+                }}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`}
+              />
+              
+              {/* Scanning overlay - only when camera active */}
+              {isCameraActive && (
+                <>
                   <motion.div
-                    key="video-feed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0"
-                  >
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      onLoadedMetadata={(e) => {
-                        const video = e.currentTarget;
-                        video.play().catch(() => console.log('Video play handled'));
-                      }}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Scanning line animation */}
-                    <motion.div
-                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent"
-                      animate={{ top: ['0%', '100%', '0%'] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    />
-                    {/* Corner markers */}
-                    <div className="absolute inset-2 pointer-events-none">
-                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr-lg" />
-                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl-lg" />
-                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br-lg" />
-                    </div>
-                  </motion.div>
-                ) : (
+                    className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
+                    animate={{ top: ['0%', '100%', '0%'] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <div className="absolute inset-2 pointer-events-none z-10">
+                    <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
+                    <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr-lg" />
+                    <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl-lg" />
+                    <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br-lg" />
+                  </div>
+                </>
+              )}
+              
+              {/* Scan icon - only when camera inactive */}
+              <AnimatePresence>
+                {!isCameraActive && (
                   <motion.div
                     key="scan-icon"
                     initial={{ opacity: 0 }}

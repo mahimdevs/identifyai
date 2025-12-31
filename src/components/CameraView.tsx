@@ -29,23 +29,24 @@ const CameraView = ({
 
   const startCamera = useCallback(async () => {
     try {
-      console.log('Starting camera with facingMode:', facingMode);
+      // Signal camera is starting FIRST so video element renders
+      setIsCameraActive(true);
+      onCameraStart?.();
+      
+      // Small delay to ensure video element is in DOM
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
       });
       
-      console.log('Got media stream, tracks:', mediaStream.getVideoTracks().length);
-      
       // Set stream to external video ref if provided (for inline preview)
       if (externalVideoRef?.current) {
-        console.log('Setting stream to external video ref');
         externalVideoRef.current.srcObject = mediaStream;
-        // Ensure video plays
         try {
           await externalVideoRef.current.play();
-          console.log('External video playing');
         } catch (playError) {
-          console.log('External video autoplay handled by browser');
+          // Autoplay may be blocked, onLoadedMetadata will handle it
         }
       }
       // Also set to internal ref for fullscreen mode
@@ -54,17 +55,17 @@ const CameraView = ({
         try {
           await internalVideoRef.current.play();
         } catch (playError) {
-          console.log('Internal video autoplay handled by browser');
+          // Autoplay may be blocked
         }
       }
       
       setStream(mediaStream);
-      setIsCameraActive(true);
-      onCameraStart?.();
     } catch (error) {
       console.error('Error accessing camera:', error);
+      setIsCameraActive(false);
+      onCameraStop?.();
     }
-  }, [facingMode, externalVideoRef, onCameraStart]);
+  }, [facingMode, externalVideoRef, onCameraStart, onCameraStop]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
