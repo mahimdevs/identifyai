@@ -83,8 +83,22 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
   const [showTips, setShowTips] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
   const [translatedResult, setTranslatedResult] = useState<Partial<AnalysisResult> | null>(null);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
-  const { languageName, isTranslating, translateContent, isEnglish } = useTranslation();
+  const { 
+    detectedLanguageName, 
+    selectedLanguage, 
+    setSelectedLanguage,
+    isTranslating, 
+    translateContent, 
+    isEnglish,
+    availableLanguages 
+  } = useTranslation();
+  
+  // Get the display language name
+  const targetLanguageName = selectedLanguage 
+    ? availableLanguages[selectedLanguage] 
+    : detectedLanguageName;
   
   // Use translated content if available
   const displayResult = useMemo(() => {
@@ -106,10 +120,11 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
   const mainCalories = nutrition.find(n => n.key === 'calories');
   const otherNutrition = nutrition.filter(n => n.key !== 'calories');
   
-  const handleTranslate = async () => {
-    if (isTranslated) {
+  const handleTranslate = async (langCode?: string) => {
+    if (isTranslated && !langCode) {
       // Toggle back to English
       setIsTranslated(false);
+      setShowLanguageSelector(false);
       return;
     }
     
@@ -121,10 +136,11 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
       tips: result.tips,
     };
     
-    const translated = await translateContent(contentToTranslate);
+    const translated = await translateContent(contentToTranslate, langCode);
     if (translated) {
       setTranslatedResult(translated);
       setIsTranslated(true);
+      setShowLanguageSelector(false);
     }
   };
 
@@ -208,7 +224,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleTranslate}
+                    onClick={() => handleTranslate()}
                     disabled={isTranslating}
                     className={cn(
                       "w-11 h-11 rounded-2xl backdrop-blur-xl border transition-all duration-300 shadow-lg",
@@ -303,34 +319,74 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 {displayResult.name}
               </h1>
               
-              {/* Language indicator */}
-              {!isEnglish && (
+              {/* Language/Translate indicator - always visible */}
+              <div className="relative inline-block">
                 <motion.button
-                  onClick={handleTranslate}
+                  onClick={() => {
+                    if (isEnglish) {
+                      setShowLanguageSelector(!showLanguageSelector);
+                    } else {
+                      handleTranslate();
+                    }
+                  }}
                   disabled={isTranslating}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/70 text-xs font-medium hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs font-medium hover:bg-white/20 transition-all"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   {isTranslating ? (
                     <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Translating...
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Translating...</span>
                     </>
                   ) : isTranslated ? (
                     <>
-                      <Check className="w-3 h-3 text-primary" />
-                      {languageName}
+                      <Check className="w-3.5 h-3.5 text-primary" />
+                      <span>{targetLanguageName}</span>
                       <span className="text-white/50">• Tap for English</span>
                     </>
                   ) : (
                     <>
-                      <Languages className="w-3 h-3" />
-                      Translate to {languageName}
+                      <Languages className="w-3.5 h-3.5" />
+                      <span>
+                        {isEnglish ? 'Translate' : `Translate to ${targetLanguageName}`}
+                      </span>
+                      {isEnglish && <ChevronDown className="w-3 h-3" />}
                     </>
                   )}
                 </motion.button>
-              )}
+                
+                {/* Language selector dropdown for English users */}
+                <AnimatePresence>
+                  {showLanguageSelector && isEnglish && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 max-h-64 overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-xl border border-white/20 shadow-2xl z-50"
+                    >
+                      <div className="p-2 space-y-1">
+                        {Object.entries(availableLanguages)
+                          .filter(([code]) => code !== 'en')
+                          .map(([code, name]) => (
+                            <motion.button
+                              key={code}
+                              onClick={() => {
+                                setSelectedLanguage(code);
+                                handleTranslate(code);
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-white/80 hover:bg-white/10 rounded-xl transition-colors"
+                              whileHover={{ x: 4 }}
+                            >
+                              {name}
+                            </motion.button>
+                          ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
 
             {/* Quick Stats Row */}
