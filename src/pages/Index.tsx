@@ -144,12 +144,12 @@ const Index = () => {
           {!isCameraActive && (
             <>
               <motion.div
-                className="absolute w-48 h-48 rounded-full border border-primary/20"
+                className="absolute w-56 h-56 rounded-full border border-primary/20"
                 animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
               <motion.div
-                className="absolute w-40 h-40 rounded-full border border-primary/30"
+                className="absolute w-48 h-48 rounded-full border border-primary/30"
                 animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.2, 0.4] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
               />
@@ -160,12 +160,12 @@ const Index = () => {
           {isCameraActive && (
             <>
               <motion.div
-                className="absolute w-36 h-36 rounded-full border-2 border-primary/40"
+                className="absolute w-44 h-44 rounded-full border-2 border-primary/40"
                 animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.2, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
               />
               <motion.div
-                className="absolute w-36 h-36 rounded-full border-2 border-primary/30"
+                className="absolute w-44 h-44 rounded-full border-2 border-primary/30"
                 animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.1, 0.4] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
               />
@@ -179,7 +179,7 @@ const Index = () => {
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           >
             {/* Glass circle with camera or animation */}
-            <div className="w-32 h-32 rounded-full border-4 border-primary flex items-center justify-center relative overflow-hidden bg-secondary">
+            <div className="w-40 h-40 rounded-full border-4 border-primary flex items-center justify-center relative overflow-hidden bg-secondary">
               {/* Video feed */}
               <video
                 ref={videoRef}
@@ -193,18 +193,18 @@ const Index = () => {
               {isCameraActive && (
                 <motion.div
                   className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent z-10"
-                  animate={{ y: [-50, 50] }}
+                  animate={{ y: [-60, 60] }}
                   transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
                 />
               )}
 
               {/* Corner markers when camera active */}
               {isCameraActive && (
-                <div className="absolute inset-2 pointer-events-none z-10">
-                  <div className="absolute top-0 left-0 w-4 h-4 border-l-2 border-t-2 border-white/80 rounded-tl" />
-                  <div className="absolute top-0 right-0 w-4 h-4 border-r-2 border-t-2 border-white/80 rounded-tr" />
-                  <div className="absolute bottom-0 left-0 w-4 h-4 border-l-2 border-b-2 border-white/80 rounded-bl" />
-                  <div className="absolute bottom-0 right-0 w-4 h-4 border-r-2 border-b-2 border-white/80 rounded-br" />
+                <div className="absolute inset-3 pointer-events-none z-10">
+                  <div className="absolute top-0 left-0 w-5 h-5 border-l-2 border-t-2 border-white/80 rounded-tl" />
+                  <div className="absolute top-0 right-0 w-5 h-5 border-r-2 border-t-2 border-white/80 rounded-tr" />
+                  <div className="absolute bottom-0 left-0 w-5 h-5 border-l-2 border-b-2 border-white/80 rounded-bl" />
+                  <div className="absolute bottom-0 right-0 w-5 h-5 border-r-2 border-b-2 border-white/80 rounded-br" />
                 </div>
               )}
               
@@ -214,14 +214,14 @@ const Index = () => {
                   {/* Shine effect */}
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"
-                    animate={{ x: [-100, 100], opacity: [0, 1, 0] }}
+                    animate={{ x: [-120, 120], opacity: [0, 1, 0] }}
                     transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                   />
                   
                   {/* Inner scanning lines */}
                   <motion.div
                     className="absolute w-full h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-                    animate={{ y: [-40, 40] }}
+                    animate={{ y: [-50, 50] }}
                     transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
                   />
                   
@@ -230,7 +230,7 @@ const Index = () => {
                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <Search className="w-10 h-10 text-primary" />
+                    <Search className="w-12 h-12 text-primary" />
                   </motion.div>
                 </>
               )}
@@ -238,7 +238,7 @@ const Index = () => {
             
             {/* Handle */}
             <div
-              className="absolute -bottom-6 -right-6 w-5 h-16 bg-gradient-to-b from-primary to-primary/70 rounded-full origin-top transform rotate-45"
+              className="absolute -bottom-7 -right-7 w-6 h-20 bg-gradient-to-b from-primary to-primary/70 rounded-full origin-top transform rotate-45"
               style={{ transformOrigin: 'top center' }}
             />
           </motion.div>
