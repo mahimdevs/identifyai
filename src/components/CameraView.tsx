@@ -55,10 +55,11 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
       if (ctx) {
         ctx.drawImage(video, 0, 0);
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        stopCamera();
         onCapture(imageData);
       }
     }
-  }, [onCapture]);
+  }, [onCapture, stopCamera]);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,7 +74,7 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
   }, [onCapture]);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center">
+    <>
       <canvas ref={canvasRef} className="hidden" />
       <input
         ref={fileInputRef}
@@ -87,22 +88,22 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
         {isCameraActive ? (
           <motion.div
             key="camera"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black"
           >
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover rounded-3xl"
+              className="w-full h-full object-cover"
             />
             
             {/* Scan overlay */}
             {isAnalyzing && (
-              <div className="absolute inset-0 rounded-3xl overflow-hidden">
+              <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent scan-line" />
                 <div className="absolute inset-0 bg-primary/5" />
               </div>
@@ -110,93 +111,70 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
 
             {/* Corner markers */}
             <div className="absolute inset-8 pointer-events-none">
-              <div className="absolute top-0 left-0 w-12 h-12 border-l-2 border-t-2 border-primary rounded-tl-lg" />
-              <div className="absolute top-0 right-0 w-12 h-12 border-r-2 border-t-2 border-primary rounded-tr-lg" />
-              <div className="absolute bottom-0 left-0 w-12 h-12 border-l-2 border-b-2 border-primary rounded-bl-lg" />
-              <div className="absolute bottom-0 right-0 w-12 h-12 border-r-2 border-b-2 border-primary rounded-br-lg" />
+              <div className="absolute top-0 left-0 w-16 h-16 border-l-3 border-t-3 border-primary rounded-tl-2xl" style={{ borderWidth: '3px' }} />
+              <div className="absolute top-0 right-0 w-16 h-16 border-r-3 border-t-3 border-primary rounded-tr-2xl" style={{ borderWidth: '3px' }} />
+              <div className="absolute bottom-0 left-0 w-16 h-16 border-l-3 border-b-3 border-primary rounded-bl-2xl" style={{ borderWidth: '3px' }} />
+              <div className="absolute bottom-0 right-0 w-16 h-16 border-r-3 border-b-3 border-primary rounded-br-2xl" style={{ borderWidth: '3px' }} />
             </div>
 
             {/* Camera controls */}
-            <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-6">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={stopCamera}
-                className="glass-button w-12 h-12 rounded-full"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+            <div className="absolute bottom-0 left-0 right-0 pb-10 pt-20 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex items-center justify-center gap-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={stopCamera}
+                  className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </Button>
 
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={capturePhoto}
-                disabled={isAnalyzing}
-                className="relative w-20 h-20 rounded-full bg-primary flex items-center justify-center glow-effect disabled:opacity-50"
-              >
-                <div className="absolute inset-1 rounded-full border-4 border-primary-foreground/30" />
-                {isAnalyzing ? (
-                  <Zap className="w-8 h-8 text-primary-foreground animate-pulse" />
-                ) : (
-                  <Camera className="w-8 h-8 text-primary-foreground" />
-                )}
-              </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={capturePhoto}
+                  disabled={isAnalyzing}
+                  className="relative w-20 h-20 rounded-full bg-white flex items-center justify-center disabled:opacity-50"
+                >
+                  <div className="absolute inset-1 rounded-full border-4 border-black/20" />
+                  {isAnalyzing ? (
+                    <Zap className="w-8 h-8 text-primary animate-pulse" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-white border-4 border-black/10" />
+                  )}
+                </motion.button>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={switchCamera}
-                className="glass-button w-12 h-12 rounded-full"
-              >
-                <SwitchCamera className="w-5 h-5" />
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={switchCamera}
+                  className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
+                >
+                  <SwitchCamera className="w-6 h-6 text-white" />
+                </Button>
+              </div>
             </div>
           </motion.div>
         ) : (
-          <motion.div
-            key="start"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col items-center gap-8 px-8"
-          >
-            <div className="text-center space-y-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.2 }}
-                className="w-24 h-24 mx-auto rounded-full bg-primary/20 flex items-center justify-center glow-effect"
-              >
-                <Camera className="w-12 h-12 text-primary" />
-              </motion.div>
-              <h2 className="text-2xl font-display font-semibold text-foreground">
-                Visual AI Recognition
-              </h2>
-              <p className="text-muted-foreground max-w-xs">
-                Point your camera at any object or upload an image to identify and learn more
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
-              <Button
-                onClick={startCamera}
-                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-              >
-                <Camera className="w-5 h-5 mr-2" />
-                Open Camera
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 h-14 rounded-2xl border-primary/30 hover:bg-primary/10 font-medium"
-              >
-                <Upload className="w-5 h-5 mr-2" />
-                Upload
-              </Button>
-            </div>
-          </motion.div>
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              onClick={startCamera}
+              className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base gap-3"
+            >
+              <Camera className="w-5 h-5" />
+              Open Camera
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 h-14 rounded-2xl border-2 border-border hover:bg-secondary font-semibold text-base gap-3"
+            >
+              <Upload className="w-5 h-5" />
+              Upload Photo
+            </Button>
+          </div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 };
 

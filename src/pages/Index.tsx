@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { History, Sparkles } from 'lucide-react';
+import { History, Sparkles, Scan } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -7,6 +7,8 @@ import CameraView from '@/components/CameraView';
 import AnalysisPanel from '@/components/AnalysisPanel';
 import HistoryPanel from '@/components/HistoryPanel';
 import AnalyzingOverlay from '@/components/AnalyzingOverlay';
+import TipsCarousel from '@/components/TipsCarousel';
+import RecentScans from '@/components/RecentScans';
 import { useHistory } from '@/hooks/useHistory';
 import { AnalysisResult } from '@/types/analysis';
 import { analyzeImage } from '@/services/analysisService';
@@ -77,22 +79,29 @@ const Index = () => {
   }, [currentResult, toggleFavorite]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen mesh-gradient flex flex-col relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-40 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-30 p-4">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
+      <header className="relative z-10 p-4 pt-6">
+        <div className="flex items-center justify-between max-w-lg mx-auto">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3"
           >
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center glow-effect">
+            <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-display font-semibold text-lg">
-              <span className="text-gradient">Vision</span>
-              <span className="text-foreground">AI</span>
-            </span>
+            <div>
+              <h1 className="font-display font-bold text-xl">
+                <span className="text-gradient">Vision</span>
+                <span className="text-foreground">AI</span>
+              </h1>
+              <p className="text-xs text-muted-foreground">Identify anything instantly</p>
+            </div>
           </motion.div>
 
           <motion.div
@@ -103,11 +112,11 @@ const Index = () => {
               variant="ghost"
               size="icon"
               onClick={() => setIsHistoryOpen(true)}
-              className="glass-button w-10 h-10 rounded-full relative"
+              className="w-11 h-11 rounded-xl bg-secondary/50 border border-border/50 hover:bg-secondary relative"
             >
               <History className="w-5 h-5" />
               {history.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
                   {history.length > 9 ? '9+' : history.length}
                 </span>
               )}
@@ -116,10 +125,74 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4 pt-20 pb-8">
-        <div className="w-full max-w-2xl aspect-[3/4] sm:aspect-video">
-          <CameraView onCapture={handleAnalyzeImage} isAnalyzing={isAnalyzing} />
+      {/* Main Content - Pushed to bottom third */}
+      <main className="flex-1 flex flex-col justify-end relative z-10">
+        {/* Center visual element */}
+        <div className="flex-1 flex items-center justify-center px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="relative float-animation"
+          >
+            <div className="w-40 h-40 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
+              <Scan className="w-16 h-16 text-primary/60" />
+            </div>
+            {/* Floating particles */}
+            <motion.div
+              className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary/40"
+              animate={{ y: [-5, 5, -5], opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute -bottom-3 -left-3 w-3 h-3 rounded-full bg-primary/30"
+              animate={{ y: [5, -5, 5], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute top-1/2 -left-4 w-2 h-2 rounded-full bg-primary/50"
+              animate={{ x: [-3, 3, -3], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </motion.div>
+        </div>
+
+        {/* Bottom section with controls */}
+        <div className="px-4 pb-8 space-y-6 max-w-lg mx-auto w-full">
+          {/* Recent scans or tips */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            {history.length > 0 ? (
+              <RecentScans 
+                history={history} 
+                onSelectItem={(result) => setCurrentResult(result)} 
+              />
+            ) : (
+              <TipsCarousel />
+            )}
+          </motion.div>
+
+          {/* Action buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <CameraView onCapture={handleAnalyzeImage} isAnalyzing={isAnalyzing} />
+          </motion.div>
+
+          {/* Subtle instruction */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-xs text-muted-foreground"
+          >
+            Point at any object to identify it with AI
+          </motion.p>
         </div>
       </main>
 
