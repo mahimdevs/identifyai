@@ -306,7 +306,8 @@ const AIChatBox = ({ context }: AIChatBoxProps) => {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
+            // Handle Gemini streaming format: candidates[0].content.parts[0].text
+            const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
             if (content) {
               assistantContent += content;
               setMessages(prev => {
