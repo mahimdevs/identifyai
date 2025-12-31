@@ -56,58 +56,69 @@ serve(async (req) => {
       );
     }
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Analyzing image with Gemini API...');
+    console.log('Analyzing image with Lovable AI Gateway...');
 
-    // Extract base64 data (remove data URL prefix if present)
-    const base64Data = imageData.includes(',') 
-      ? imageData.split(',')[1] 
-      : imageData;
-
-    // Determine MIME type
-    const mimeMatch = imageData.match(/data:([^;]+);/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: SYSTEM_PROMPT + "\n\nAnalyze this image and provide the JSON response:" },
-                {
-                  inline_data: {
-                    mime_type: mimeType,
-                    data: base64Data,
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 2048,
-          },
-        }),
+    // Build the image content for the API
+    // The imageData should be a data URL like "data:image/jpeg;base64,..."
+    const imageContent = {
+      type: "image_url",
+      image_url: {
+        url: imageData
       }
-    );
+    };
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analyze this image and provide the JSON response:' },
+              imageContent
+            ]
+          }
+        ],
+        temperature: 0.4,
+        max_tokens: 2048,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add more credits.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ error: 'AI analysis failed', details: errorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -115,10 +126,10 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Gemini response received');
+    console.log('AI Gateway response received');
 
     // Extract text from response
-    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const textContent = data.choices?.[0]?.message?.content;
     if (!textContent) {
       console.error('No text content in response:', JSON.stringify(data));
       return new Response(
