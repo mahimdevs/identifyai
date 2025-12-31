@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Language code to display name mapping
-const languageNames: Record<string, string> = {
+export const languageNames: Record<string, string> = {
   en: 'English',
   es: 'Spanish',
   fr: 'French',
@@ -49,7 +49,8 @@ const languageNames: Record<string, string> = {
 
 export const useTranslation = () => {
   const [detectedLanguage, setDetectedLanguage] = useState<string>('en');
-  const [languageName, setLanguageName] = useState<string>('English');
+  const [detectedLanguageName, setDetectedLanguageName] = useState<string>('English');
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
@@ -57,13 +58,22 @@ export const useTranslation = () => {
     const browserLang = navigator.language || (navigator as any).userLanguage || 'en';
     const langCode = browserLang.split('-')[0].toLowerCase();
     setDetectedLanguage(langCode);
-    setLanguageName(languageNames[langCode] || browserLang);
+    setDetectedLanguageName(languageNames[langCode] || browserLang);
+    
+    // Set default selected language to detected language (if not English)
+    if (langCode !== 'en') {
+      setSelectedLanguage(langCode);
+    }
   }, []);
 
   const translateContent = async <T extends Record<string, any>>(
-    content: T
+    content: T,
+    targetLangCode?: string
   ): Promise<T | null> => {
-    if (detectedLanguage === 'en') {
+    const langCode = targetLangCode || selectedLanguage || detectedLanguage;
+    const langName = languageNames[langCode] || langCode;
+    
+    if (langCode === 'en') {
       toast.info('Content is already in English');
       return null;
     }
@@ -74,7 +84,7 @@ export const useTranslation = () => {
       const { data, error } = await supabase.functions.invoke('translate', {
         body: {
           content,
-          targetLanguage: languageName,
+          targetLanguage: langName,
         },
       });
 
@@ -89,7 +99,7 @@ export const useTranslation = () => {
         return null;
       }
 
-      toast.success(`Translated to ${languageName}`);
+      toast.success(`Translated to ${langName}`);
       return data.translated as T;
     } catch (err) {
       console.error('Translation error:', err);
@@ -102,9 +112,12 @@ export const useTranslation = () => {
 
   return {
     detectedLanguage,
-    languageName,
+    detectedLanguageName,
+    selectedLanguage,
+    setSelectedLanguage,
     isTranslating,
     translateContent,
     isEnglish: detectedLanguage === 'en',
+    availableLanguages: languageNames,
   };
 };
