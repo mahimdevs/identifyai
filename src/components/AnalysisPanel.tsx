@@ -6,6 +6,7 @@ import ConfidenceBadge from './ConfidenceBadge';
 import { AnalysisResult } from '@/types/analysis';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import AIChatBox from './AIChatBox';
 
 interface AnalysisPanelProps {
   result: AnalysisResult;
@@ -580,6 +581,19 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 </AnimatePresence>
               </motion.div>
             )}
+
+            {/* AI Chat Section */}
+            <motion.div variants={itemVariants}>
+              <AIChatBox 
+                context={{
+                  name: displayResult.name,
+                  category: displayResult.category,
+                  attributes: displayResult.attributes,
+                  details: displayResult.details,
+                  tips: displayResult.tips,
+                }}
+              />
+            </motion.div>
 
             {/* Disclaimer */}
             <motion.p 
