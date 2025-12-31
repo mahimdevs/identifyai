@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { History, Sparkles, Scan } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,8 @@ const Index = () => {
   const [analyzingImage, setAnalyzingImage] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<AnalysisResult | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   const {
     history,
@@ -127,16 +129,57 @@ const Index = () => {
 
       {/* Main Content - Pushed to bottom third */}
       <main className="flex-1 flex flex-col justify-end relative z-10">
-        {/* Center visual element */}
+        {/* Center visual element / Camera preview */}
         <div className="flex-1 flex items-center justify-center px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="relative float-animation"
+            className="relative"
           >
-            <div className="w-40 h-40 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
-              <Scan className="w-16 h-16 text-primary/60" />
+            <div className="w-56 h-56 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm overflow-hidden relative">
+              <AnimatePresence mode="wait">
+                {isCameraActive ? (
+                  <motion.div
+                    key="video-feed"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0"
+                  >
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Scanning line animation */}
+                    <motion.div
+                      className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent"
+                      animate={{ top: ['0%', '100%', '0%'] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    />
+                    {/* Corner markers */}
+                    <div className="absolute inset-2 pointer-events-none">
+                      <div className="absolute top-0 left-0 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br-lg" />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="scan-icon"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="float-animation"
+                  >
+                    <Scan className="w-16 h-16 text-primary/60" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             {/* Floating particles */}
             <motion.div
@@ -181,7 +224,14 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <CameraView onCapture={handleAnalyzeImage} isAnalyzing={isAnalyzing} />
+            <CameraView 
+              onCapture={handleAnalyzeImage} 
+              isAnalyzing={isAnalyzing}
+              inlineMode={true}
+              videoRef={videoRef}
+              onCameraStart={() => setIsCameraActive(true)}
+              onCameraStop={() => setIsCameraActive(false)}
+            />
           </motion.div>
 
           {/* Subtle instruction */}
@@ -191,7 +241,7 @@ const Index = () => {
             transition={{ delay: 0.5 }}
             className="text-center text-xs text-muted-foreground"
           >
-            Point at any object to identify it with AI
+            {isCameraActive ? 'Position the item in the frame and capture' : 'Point at any object to identify it with AI'}
           </motion.p>
         </div>
       </main>
