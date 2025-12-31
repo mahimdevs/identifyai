@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import CameraView from '@/components/CameraView';
 import AnalysisPanel from '@/components/AnalysisPanel';
 import HistoryPanel from '@/components/HistoryPanel';
+import AnalyzingOverlay from '@/components/AnalyzingOverlay';
 import { useHistory } from '@/hooks/useHistory';
 import { AnalysisResult } from '@/types/analysis';
 import { analyzeImage } from '@/services/analysisService';
@@ -13,6 +14,7 @@ import { analyzeImage } from '@/services/analysisService';
 const Index = () => {
   const { toast } = useToast();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzingImage, setAnalyzingImage] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<AnalysisResult | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   
@@ -26,6 +28,7 @@ const Index = () => {
 
   const handleAnalyzeImage = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
+    setAnalyzingImage(imageData);
     
     try {
       const result = await analyzeImage(imageData);
@@ -40,6 +43,7 @@ const Index = () => {
       });
     } finally {
       setIsAnalyzing(false);
+      setAnalyzingImage(null);
     }
   }, [addToHistory, toast]);
 
@@ -119,9 +123,16 @@ const Index = () => {
         </div>
       </main>
 
+      {/* Analyzing Overlay */}
+      <AnimatePresence>
+        {isAnalyzing && analyzingImage && (
+          <AnalyzingOverlay imageData={analyzingImage} />
+        )}
+      </AnimatePresence>
+
       {/* Analysis Panel */}
       <AnimatePresence>
-        {currentResult && (
+        {currentResult && !isAnalyzing && (
           <AnalysisPanel
             result={currentResult}
             onToggleFavorite={handleToggleFavorite}
