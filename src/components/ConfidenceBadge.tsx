@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { Check, AlertTriangle, HelpCircle } from 'lucide-react';
 
 interface ConfidenceBadgeProps {
   level: 'high' | 'medium' | 'low';
@@ -6,29 +7,44 @@ interface ConfidenceBadgeProps {
 }
 
 const ConfidenceBadge = ({ level, className }: ConfidenceBadgeProps) => {
-  const labels = {
-    high: 'High Confidence',
-    medium: 'Medium Confidence',
-    low: 'Low Confidence',
+  const config = {
+    high: {
+      label: 'High',
+      icon: Check,
+      bg: 'bg-emerald-500/20',
+      border: 'border-emerald-500/30',
+      text: 'text-emerald-400',
+    },
+    medium: {
+      label: 'Medium',
+      icon: AlertTriangle,
+      bg: 'bg-amber-500/20',
+      border: 'border-amber-500/30',
+      text: 'text-amber-400',
+    },
+    low: {
+      label: 'Low',
+      icon: HelpCircle,
+      bg: 'bg-rose-500/20',
+      border: 'border-rose-500/30',
+      text: 'text-rose-400',
+    },
   };
+
+  const { label, icon: Icon, bg, border, text } = config[level];
 
   return (
     <span
       className={cn(
-        'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border',
-        level === 'high' && 'confidence-high',
-        level === 'medium' && 'confidence-medium',
-        level === 'low' && 'confidence-low',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border backdrop-blur-md',
+        bg,
+        border,
+        text,
         className
       )}
     >
-      <span className={cn(
-        'w-1.5 h-1.5 rounded-full mr-2',
-        level === 'high' && 'bg-success',
-        level === 'medium' && 'bg-warning',
-        level === 'low' && 'bg-destructive',
-      )} />
-      {labels[level]}
+      <Icon className="w-3 h-3" />
+      {label}
     </span>
   );
 };
