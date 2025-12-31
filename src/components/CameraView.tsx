@@ -1,15 +1,27 @@
-import { useRef, useState, useCallback } from 'react';
-import { Camera, Upload, X, SwitchCamera, Zap } from 'lucide-react';
+import { useRef, useState, useCallback, useEffect } from 'react';
+import { Camera, Upload, X, SwitchCamera, Zap, Aperture } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CameraViewProps {
   onCapture: (imageData: string) => void;
   isAnalyzing: boolean;
+  inlineMode?: boolean;
+  videoRef?: React.RefObject<HTMLVideoElement>;
+  onCameraStart?: () => void;
+  onCameraStop?: () => void;
 }
 
-const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+const CameraView = ({ 
+  onCapture, 
+  isAnalyzing, 
+  inlineMode = false,
+  videoRef: externalVideoRef,
+  onCameraStart,
+  onCameraStop 
+}: CameraViewProps) => {
+  const internalVideoRef = useRef<HTMLVideoElement>(null);
+  const videoRefToUse = externalVideoRef || internalVideoRef;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -21,23 +33,25 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+      if (videoRefToUse.current) {
+        videoRefToUse.current.srcObject = mediaStream;
         setStream(mediaStream);
         setIsCameraActive(true);
+        onCameraStart?.();
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
     }
-  }, [facingMode]);
+  }, [facingMode, videoRefToUse, onCameraStart]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
       setIsCameraActive(false);
+      onCameraStop?.();
     }
-  }, [stream]);
+  }, [stream, onCameraStop]);
 
   const switchCamera = useCallback(async () => {
     stopCamera();
@@ -46,8 +60,8 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
   }, [stopCamera, startCamera]);
 
   const capturePhoto = useCallback(() => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
+    if (videoRefToUse.current && canvasRef.current) {
+      const video = videoRefToUse.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -59,7 +73,7 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
         onCapture(imageData);
       }
     }
-  }, [onCapture, stopCamera]);
+  }, [onCapture, stopCamera, videoRefToUse]);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,6 +87,15 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
     }
   }, [onCapture]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
   return (
     <>
       <canvas ref={canvasRef} className="hidden" />
@@ -84,8 +107,19 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
         className="hidden"
       />
 
+      {/* Inline video element for preview square mode */}
+      {inlineMode && (
+        <video
+          ref={internalVideoRef}
+          autoPlay
+          playsInline
+          muted
+          className="hidden"
+        />
+      )}
+
       <AnimatePresence mode="wait">
-        {isCameraActive ? (
+        {isCameraActive && !inlineMode ? (
           <motion.div
             key="camera"
             initial={{ opacity: 0 }}
@@ -94,7 +128,7 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
             className="fixed inset-0 z-50 bg-black"
           >
             <video
-              ref={videoRef}
+              ref={internalVideoRef}
               autoPlay
               playsInline
               muted
@@ -155,22 +189,62 @@ const CameraView = ({ onCapture, isAnalyzing }: CameraViewProps) => {
             </div>
           </motion.div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <Button
-              onClick={startCamera}
-              className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base gap-3"
-            >
-              <Camera className="w-5 h-5" />
-              Open Camera
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 h-14 rounded-2xl border-2 border-border hover:bg-secondary font-semibold text-base gap-3"
-            >
-              <Upload className="w-5 h-5" />
-              Upload Photo
-            </Button>
+          <div className="flex flex-col gap-3 w-full">
+            {/* Capture button - only shows when camera is active in inline mode */}
+            {isCameraActive && inlineMode && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex gap-3"
+              >
+                <Button
+                  onClick={capturePhoto}
+                  disabled={isAnalyzing}
+                  className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base gap-3"
+                >
+                  <Aperture className="w-5 h-5" />
+                  Capture & Identify
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={switchCamera}
+                  className="h-14 w-14 rounded-2xl border-2 border-border hover:bg-secondary"
+                >
+                  <SwitchCamera className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={stopCamera}
+                  className="h-14 w-14 rounded-2xl border-2 border-border hover:bg-secondary"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Default buttons - hide when camera is active in inline mode */}
+            {(!isCameraActive || !inlineMode) && (
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Button
+                  onClick={startCamera}
+                  className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base gap-3"
+                >
+                  <Camera className="w-5 h-5" />
+                  Open Camera
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 h-14 rounded-2xl border-2 border-border hover:bg-secondary font-semibold text-base gap-3"
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload Photo
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </AnimatePresence>
