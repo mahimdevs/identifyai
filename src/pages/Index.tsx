@@ -8,6 +8,7 @@ import AnalysisPanel from '@/components/AnalysisPanel';
 import HistoryPanel from '@/components/HistoryPanel';
 import { useHistory } from '@/hooks/useHistory';
 import { AnalysisResult } from '@/types/analysis';
+import { analyzeImage } from '@/services/analysisService';
 
 const Index = () => {
   const { toast } = useToast();
@@ -23,54 +24,24 @@ const Index = () => {
     clearAll,
   } = useHistory();
 
-  // Mock analysis for now - will be replaced with Gemini API
-  const analyzeImage = useCallback(async (imageData: string) => {
+  const handleAnalyzeImage = useCallback(async (imageData: string) => {
     setIsAnalyzing(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mock result - this will be replaced with actual Gemini API response
-    const mockResult: AnalysisResult = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      imageData,
-      name: 'Golden Retriever',
-      category: 'Animal / Dog',
-      confidence: 'high',
-      attributes: [
-        { label: 'Breed', value: 'Golden Retriever' },
-        { label: 'Size', value: 'Large (55-75 lbs)' },
-        { label: 'Coat', value: 'Golden, Dense' },
-        { label: 'Temperament', value: 'Friendly, Intelligent' },
-      ],
-      details: [
-        {
-          title: 'Breed Information',
-          content: 'The Golden Retriever is a medium-large gun dog that was bred to retrieve shot waterfowl during hunting. They are known for their friendly, reliable, and kind temperament.',
-        },
-        {
-          title: 'Care Requirements',
-          content: 'Golden Retrievers require regular grooming due to their dense coat. They need daily exercise and mental stimulation. Regular vet check-ups are important as they can be prone to hip dysplasia.',
-        },
-        {
-          title: 'Training Notes',
-          content: 'Highly trainable and eager to please. Responds well to positive reinforcement. Early socialization is recommended.',
-        },
-      ],
-      tips: [
-        'Excellent family pet with a gentle disposition',
-        'Requires 1-2 hours of exercise daily',
-        'Regular brushing prevents matting and reduces shedding',
-        'Prone to obesity - monitor food intake',
-      ],
-      isFavorite: false,
-    };
-
-    setCurrentResult(mockResult);
-    addToHistory(mockResult);
-    setIsAnalyzing(false);
-  }, [addToHistory]);
+    try {
+      const result = await analyzeImage(imageData);
+      setCurrentResult(result);
+      addToHistory(result);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Unable to analyze the image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [addToHistory, toast]);
 
   const handleShare = useCallback(async () => {
     if (!currentResult) return;
@@ -144,7 +115,7 @@ const Index = () => {
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4 pt-20 pb-8">
         <div className="w-full max-w-2xl aspect-[3/4] sm:aspect-video">
-          <CameraView onCapture={analyzeImage} isAnalyzing={isAnalyzing} />
+          <CameraView onCapture={handleAnalyzeImage} isAnalyzing={isAnalyzing} />
         </div>
       </main>
 
