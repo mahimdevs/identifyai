@@ -1,10 +1,11 @@
-import { Heart, Share2, X, Scale, Hash, Flame, Droplet, Wheat, Dumbbell, ChevronDown, Lightbulb, Sparkles } from 'lucide-react';
+import { Heart, Share2, X, Scale, Hash, Flame, Droplet, Wheat, Dumbbell, ChevronDown, Lightbulb, Sparkles, Languages, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import ConfidenceBadge from './ConfidenceBadge';
 import { AnalysisResult } from '@/types/analysis';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface AnalysisPanelProps {
   result: AnalysisResult;
@@ -80,10 +81,52 @@ const itemVariants = {
 
 const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisPanelProps) => {
   const [showTips, setShowTips] = useState(false);
-  const nutrition = extractNutrition(result.attributes);
-  const quickStats = getQuickStats(result.attributes);
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedResult, setTranslatedResult] = useState<Partial<AnalysisResult> | null>(null);
+  
+  const { languageName, isTranslating, translateContent, isEnglish } = useTranslation();
+  
+  // Use translated content if available
+  const displayResult = useMemo(() => {
+    if (isTranslated && translatedResult) {
+      return {
+        ...result,
+        name: translatedResult.name || result.name,
+        category: translatedResult.category || result.category,
+        attributes: translatedResult.attributes || result.attributes,
+        details: translatedResult.details || result.details,
+        tips: translatedResult.tips || result.tips,
+      };
+    }
+    return result;
+  }, [result, isTranslated, translatedResult]);
+  
+  const nutrition = extractNutrition(displayResult.attributes);
+  const quickStats = getQuickStats(displayResult.attributes);
   const mainCalories = nutrition.find(n => n.key === 'calories');
   const otherNutrition = nutrition.filter(n => n.key !== 'calories');
+  
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      // Toggle back to English
+      setIsTranslated(false);
+      return;
+    }
+    
+    const contentToTranslate = {
+      name: result.name,
+      category: result.category,
+      attributes: result.attributes,
+      details: result.details,
+      tips: result.tips,
+    };
+    
+    const translated = await translateContent(contentToTranslate);
+    if (translated) {
+      setTranslatedResult(translated);
+      setIsTranslated(true);
+    }
+  };
 
   return (
     <motion.div
@@ -159,6 +202,31 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
               </Button>
             </motion.div>
             <div className="flex gap-3">
+              {/* Translate button - only show if not English */}
+              {!isEnglish && (
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleTranslate}
+                    disabled={isTranslating}
+                    className={cn(
+                      "w-11 h-11 rounded-2xl backdrop-blur-xl border transition-all duration-300 shadow-lg",
+                      isTranslated 
+                        ? "bg-primary/30 border-primary/50 hover:bg-primary/40" 
+                        : "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30"
+                    )}
+                  >
+                    {isTranslating ? (
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    ) : isTranslated ? (
+                      <Check className="w-5 h-5 text-primary" />
+                    ) : (
+                      <Languages className="w-5 h-5 text-white" />
+                    )}
+                  </Button>
+                </motion.div>
+              )}
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   variant="ghost"
@@ -229,11 +297,40 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                 whileHover={{ scale: 1.02 }}
               >
                 <Sparkles className="w-3 h-3" />
-                {result.category}
+                {displayResult.category}
               </motion.span>
               <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-                {result.name}
+                {displayResult.name}
               </h1>
+              
+              {/* Language indicator */}
+              {!isEnglish && (
+                <motion.button
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/70 text-xs font-medium hover:bg-white/15 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isTranslating ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Translating...
+                    </>
+                  ) : isTranslated ? (
+                    <>
+                      <Check className="w-3 h-3 text-primary" />
+                      {languageName}
+                      <span className="text-white/50">• Tap for English</span>
+                    </>
+                  ) : (
+                    <>
+                      <Languages className="w-3 h-3" />
+                      Translate to {languageName}
+                    </>
+                  )}
+                </motion.button>
+              )}
             </motion.div>
 
             {/* Quick Stats Row */}
@@ -346,12 +443,12 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
             )}
 
             {/* Details Cards */}
-            {result.details.length > 0 && (
+            {displayResult.details.length > 0 && (
               <motion.div
                 variants={itemVariants}
                 className="space-y-4"
               >
-                {result.details.slice(0, 2).map((detail, index) => (
+                {displayResult.details.slice(0, 2).map((detail, index) => (
                   <motion.div
                     key={index}
                     className="p-5 rounded-3xl bg-white/10 border border-white/15 backdrop-blur-xl overflow-hidden relative"
@@ -374,7 +471,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
             )}
 
             {/* Tips Section */}
-            {result.tips.length > 0 && (
+            {displayResult.tips.length > 0 && (
               <motion.div variants={itemVariants}>
                 <motion.button
                   onClick={() => setShowTips(!showTips)}
@@ -409,7 +506,7 @@ const AnalysisPanel = ({ result, onToggleFavorite, onShare, onClose }: AnalysisP
                       className="overflow-hidden"
                     >
                       <ul className="mt-4 space-y-3 px-1">
-                        {result.tips.map((tip, index) => (
+                        {displayResult.tips.map((tip, index) => (
                           <motion.li
                             key={index}
                             initial={{ x: -30, opacity: 0 }}
