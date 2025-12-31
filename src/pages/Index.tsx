@@ -58,7 +58,7 @@ const Index = () => {
       if (navigator.share) {
         await navigator.share({
           title: `Identified: ${currentResult.name}`,
-          text: `I identified a ${currentResult.name} using Visual AI!\n\nCategory: ${currentResult.category}\nConfidence: ${currentResult.confidence}`,
+          text: `I identified a ${currentResult.name} using IdentifyAnytime!\n\nCategory: ${currentResult.category}\nConfidence: ${currentResult.confidence}`,
         });
       } else {
         await navigator.clipboard.writeText(
@@ -99,8 +99,8 @@ const Index = () => {
             </div>
             <div>
               <h1 className="font-display font-bold text-xl">
-                <span className="text-gradient">Vision</span>
-                <span className="text-foreground">AI</span>
+                <span className="text-gradient">Identify</span>
+                <span className="text-foreground">Anytime</span>
               </h1>
               <p className="text-xs text-muted-foreground">Identify anything instantly</p>
             </div>
